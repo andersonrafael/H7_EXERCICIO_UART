@@ -1,4 +1,7 @@
-../Core/Src/main.c:67:5:main	6
-../Core/Src/main.c:154:6:SystemClock_Config	4
-../Core/Src/main.c:205:6:Display_Menu	1
-../Core/Src/main.c:221:6:Error_Handler	1
+../Core/Src/main.c:80:5:main	6
+../Core/Src/main.c:163:6:SystemClock_Config	4
+../Core/Src/main.c:214:6:Display_Menu	1
+../Core/Src/main.c:229:6:Set_PWM_Duty	2
+../Core/Src/main.c:245:6:ramp_pwm	2
+../Core/Src/main.c:258:6:handle_button_increment	6
+../Core/Src/main.c:290:6:Error_Handler	1
