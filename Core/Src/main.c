@@ -45,11 +45,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+ uint8_t rx_data;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void Set_PWM_Duty(uint8_t duty_percent);
 /* USER CODE BEGIN PFP */
 void Display_Menu(void);
 /* USER CODE END PFP */
@@ -100,8 +101,48 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  Display_Menu();
-	  HAL_Delay(1000);
+	  while (1)
+	  {
+	    Display_Menu();
+
+	    // Aguarda entrada do usuário
+	    if (HAL_UART_Receive(&huart3, &rx_data, 1, HAL_MAX_DELAY) == HAL_OK)
+	    {
+	      switch (rx_data)
+	      {
+	        case '1':
+	          printf(">> Duty fixo 20%% selecionado.\r\n");
+	          // Chame aqui a função que ajusta o PWM para 20%
+	          break;
+
+	        case '2':
+	          printf(">> Duty fixo 80%% selecionado.\r\n");
+	          // Função para PWM 80%
+	          break;
+
+	        case '3':
+	          printf(">> Ramp 0-100%% em 5s selecionado.\r\n");
+	          // Ramp function
+	          break;
+
+	        case '4':
+	          printf(">> Incremento de 10%% por botão.\r\n");
+	          // Botão handler
+	          break;
+
+	        default:
+	          printf(">> Opcao invalida. Tente novamente.\r\n");
+	          break;
+	      }
+	    }
+
+	    HAL_Delay(1000); // Pequeno delay para estabilidade
+	  }
+
+
+
+
+
   }
   /* USER CODE END 3 */
 }
@@ -182,8 +223,13 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-  while (1)
-  {
+
+
+    /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
+    while (1)
+    {
+
   }
   /* USER CODE END Error_Handler_Debug */
 }
