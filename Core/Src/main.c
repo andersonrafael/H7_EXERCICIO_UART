@@ -130,11 +130,13 @@ int main(void)
         case '1':
           printf(">> Duty fixo 20%% selecionado.\r\n");
           Set_PWM_Duty(20);
+          printf(">> Duty atual: %d%%\r\n", current_duty_cycle);
           break;
 
         case '2':
           printf(">> Duty fixo 80%% selecionado.\r\n");
           Set_PWM_Duty(80);
+          printf(">> Duty atual: %d%%\r\n", current_duty_cycle);
           break;
 
         case '3':
@@ -246,7 +248,12 @@ void ramp_pwm(void) {
     uint16_t delay_ms = 5000 / 101; // 5 segundos (5000 ms) dividido por 101 passos (0 a 100)
     for (uint8_t duty = 0; duty <= 100; duty++) {
         Set_PWM_Duty(duty);
-        HAL_Delay(delay_ms);
+        // Imprime a cada 10%, incluindo 0% e 100%
+                if (duty % 10 == 0) { // Se o duty for múltiplo de 10
+                    printf(">> Rampa: Duty atual %d%%\r\n", duty);
+                }
+                HAL_Delay(delay_ms);
+
     }
     printf(">> Rampa concluida. Duty cycle em 100%%\r\n");
 }

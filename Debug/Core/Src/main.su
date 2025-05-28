@@ -1,7 +1,7 @@
 ../Core/Src/main.c:80:5:main	8	static
-../Core/Src/main.c:163:6:SystemClock_Config	120	static
-../Core/Src/main.c:214:6:Display_Menu	8	static
-../Core/Src/main.c:229:6:Set_PWM_Duty	24	static
-../Core/Src/main.c:245:6:ramp_pwm	16	static
-../Core/Src/main.c:258:6:handle_button_increment	16	static
-../Core/Src/main.c:290:6:Error_Handler	4	static,ignoring_inline_asm
+../Core/Src/main.c:165:6:SystemClock_Config	120	static
+../Core/Src/main.c:216:6:Display_Menu	8	static
+../Core/Src/main.c:231:6:Set_PWM_Duty	24	static
+../Core/Src/main.c:247:6:ramp_pwm	16	static
+../Core/Src/main.c:265:6:handle_button_increment	16	static
+../Core/Src/main.c:297:6:Error_Handler	4	static,ignoring_inline_asm
