@@ -21,12 +21,10 @@
 #include "memorymap.h"
 #include "usart.h"
 #include "gpio.h"
-#include "tim.h" // Inclua o cabeçalho do Timer configurado (ex: tim.h para TIM1)
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include <string.h> // Para sprintf
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,11 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define PWM_TIMER_HANDLE    htim1 // Altere para o handle do seu Timer (ex: htim1, htim2, etc.)
-#define PWM_TIMER_CHANNEL   TIM_CHANNEL_1 // Altere para o canal PWM usado (ex: TIM_CHANNEL_1, TIM_CHANNEL_2, etc.)
-#define PWM_PERIOD          (__HAL_TIM_GET_AUTORELOAD(&PWM_TIMER_HANDLE) + 1) // Obtém o ARR (Auto-Reload Register) do Timer
-#define USER_BUTTON_Pin     B1_Pin // Assumindo que o botão de usuário é o B1 (Blue Button na NUCLEO-F429ZI)
-#define USER_BUTTON_GPIO_Port B1_GPIO_Port // Porta GPIO do botão
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,26 +45,18 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t rx_data;
-uint8_t current_duty_cycle = 0; // Variável para armazenar o duty cycle atual para a opção 4
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void Set_PWM_Duty(uint8_t duty_percent);
 /* USER CODE BEGIN PFP */
 void Display_Menu(void);
-void ramp_pwm(void);
-void handle_button_increment(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-// Redireciona printf para a UART
-/*int _write(int file, char *ptr, int len) {
-    HAL_UART_Transmit(&huart3, (uint8_t*)ptr, len, HAL_MAX_DELAY);
-    return len;
-}*/
+
 /* USER CODE END 0 */
 
 /**
@@ -103,13 +89,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART3_UART_Init();
-  MX_TIM1_Init(); // Inicialize o Timer configurado (ex: MX_TIM1_Init();)
   /* USER CODE BEGIN 2 */
-
-  // Inicia o PWM
-  HAL_TIM_PWM_Start(&PWM_TIMER_HANDLE, PWM_TIMER_CHANNEL);
-  Set_PWM_Duty(0); // Inicia com o PWM em 0%
-  printf(">> PWM iniciado em 0%%\r\n");
 
   /* USER CODE END 2 */
 
@@ -120,40 +100,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Display_Menu();
-
-    // Aguarda entrada do usuário
-    if (HAL_UART_Receive(&huart3, &rx_data, 1, HAL_MAX_DELAY) == HAL_OK)
-    {
-      switch (rx_data)
-      {
-        case '1':
-          printf(">> Duty fixo 20%% selecionado.\r\n");
-          Set_PWM_Duty(20);
-          printf(">> Duty atual: %d%%\r\n", current_duty_cycle);
-          break;
-
-        case '2':
-          printf(">> Duty fixo 80%% selecionado.\r\n");
-          Set_PWM_Duty(80);
-          printf(">> Duty atual: %d%%\r\n", current_duty_cycle);
-          break;
-
-        case '3':
-          printf(">> Ramp 0-100%% em 5s selecionado.\r\n");
-          ramp_pwm();
-          break;
-
-        case '4':
-          printf(">> Incremento de 10%% por clique no botao. Pressione o botao de usuario.\r\n");
-          handle_button_increment();
-          break;
-
-        default:
-          printf(">> Opcao invalida. Tente novamente.\r\n");
-          break;
-      }
-    }
+	  Display_Menu();
+	  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -220,72 +168,7 @@ void Display_Menu(void) {
     printf("[2] Duty fixo 80%%\r\n");
     printf("[3] Ramp 0-100%% em 5 s\r\n");
     printf("[4] +10%% por clique no botao\r\n");
-    printf("Selecione a opcao: ");
-}
-
-/**
-  * @brief Ajusta o duty cycle do PWM.
-  * @param duty_percent: O duty cycle em porcentagem (0-100).
-  * @retval None
-  */
-void Set_PWM_Duty(uint8_t duty_percent) {
-    if (duty_percent > 100) {
-        duty_percent = 100;
-    }
-    // Calcula o valor do registrador de comparação (CCR)
-    // O valor do CCR é duty_percent * PWM_PERIOD / 100
-    uint32_t ccr_value = (uint32_t)((float)PWM_PERIOD * duty_percent / 100.0f);
-
-    __HAL_TIM_SET_COMPARE(&PWM_TIMER_HANDLE, PWM_TIMER_CHANNEL, ccr_value);
-    current_duty_cycle = duty_percent; // Atualiza o duty cycle atual
-}
-
-/**
-  * @brief Implementa uma rampa de PWM de 0% a 100% em 5 segundos.
-  * @retval None
-  */
-void ramp_pwm(void) {
-    uint16_t delay_ms = 5000 / 101; // 5 segundos (5000 ms) dividido por 101 passos (0 a 100)
-    for (uint8_t duty = 0; duty <= 100; duty++) {
-        Set_PWM_Duty(duty);
-        // Imprime a cada 10%, incluindo 0% e 100%
-                if (duty % 10 == 0) { // Se o duty for múltiplo de 10
-                    printf(">> Rampa: Duty atual %d%%\r\n", duty);
-                }
-                HAL_Delay(delay_ms);
-
-    }
-    printf(">> Rampa concluida. Duty cycle em 100%%\r\n");
-}
-
-/**
-  * @brief Lida com o incremento de 10% no duty cycle via botão.
-  * @retval None
-  */
-void handle_button_increment(void) {
-    uint8_t last_duty = current_duty_cycle;
-    // Loop para esperar o botão ou uma nova entrada UART
-    while (HAL_UART_Receive(&huart3, &rx_data, 1, 0) != HAL_OK) { // Non-blocking receive
-        if (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_RESET) { // Botão pressionado (assumindo pull-up)
-            HAL_Delay(50); // Debounce
-            while(HAL_GPIO_ReadPin(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == GPIO_PIN_RESET); // Espera soltar o botão
-
-            current_duty_cycle += 10;
-            if (current_duty_cycle > 100) {
-                current_duty_cycle = 0;
-            }
-            Set_PWM_Duty(current_duty_cycle);
-            printf(">> Duty atual: %d%%\r\n", current_duty_cycle);
-        }
-        // Pequeno delay para evitar loop muito rápido
-        HAL_Delay(10);
-    }
-    // Se uma nova entrada UART for recebida, saia da função para o loop principal
-    // A variável rx_data já conterá o novo valor digitado.
-    // Restaura o último duty cycle para a opção 4, caso não seja mantido pela próxima opção.
-    if (rx_data != '4') {
-        current_duty_cycle = last_duty;
-    }
+    printf("Selecione a opcao: \r\n");
 }
 
 /* USER CODE END 4 */
@@ -299,13 +182,8 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-
-
-    /* Infinite loop */
-    /* USER CODE BEGIN WHILE */
-    while (1)
-    {
-
+  while (1)
+  {
   }
   /* USER CODE END Error_Handler_Debug */
 }
@@ -313,7 +191,7 @@ void Error_Handler(void)
 #ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
-  * where the assert_param error has occurred.
+  *         where the assert_param error has occurred.
   * @param  file: pointer to the source file name
   * @param  line: assert_param error line source number
   * @retval None
